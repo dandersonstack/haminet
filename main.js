@@ -1,24 +1,54 @@
-const { app, BrowserWindow, Tray, Menu, session } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  session,
+  ipcMain,
+} = require("electron");
 const path = require("path");
 const redis = require("redis");
 const { ElectronBlocker } = require("@cliqz/adblocker-electron");
 const { fetch } = require("cross-fetch");
 
+require("electron-reload")(__dirname, {
+  electron: path.join(
+    __dirname,
+    "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+  ),
+});
+
 const assetsDirectory = path.join(__dirname, "assets");
 
+let win = undefined;
 let tray = undefined;
 let redisClient = undefined;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 800,
     height: 600,
+    // frame: false,
+    // transparent: true,
     show: true,
     webPreferences: {
       nodeIntegration: true,
     },
   });
-  win.loadFile("index.html");
+  win.loadFile("index.html").then(() => {});
+
+  win.webContents.on("did-finish-load", () => {
+    redisClient.get("youtube:id", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      win.webContents.send("youtube:id", data);
+      ipcMain.on("youtube:id", (event, input, output) => {
+        let youtube_id = input;
+        redisClient.set("youtube:id", youtube_id, (err, data) => {});
+      });
+    });
+  });
 }
 
 // This method will be called when Electron has finished
@@ -27,7 +57,7 @@ function createTray() {
   tray = new Tray(path.join(assetsDirectory, "foo.png"));
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: "🎭 Available", type: "radio" },
+    { label: "🎭 Availables", type: "radio" },
     { label: "🙉 Concentrated", type: "radio" },
     { label: "🚽 Not here", type: "radio", checked: true },
   ]);
@@ -61,20 +91,11 @@ function createPlayerWindow() {
 
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  ElectronBlocker.fromLists(fetch, [
-    "https://easylist.to/easylist/easylist.txt",
-  ]).then(() => {
-    connectRedis();
-    redisClient.get("foo", (err, data) => {
-      if (err) {
-        throw err;
-      }
-      console.log(data);
-    });
-    createTray();
-    createWindow();
-    createPlayerWindow();
-  });
+  connectRedis();
+  createTray();
+  createWindow();
+
+  // createPlayerWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
