@@ -13,17 +13,12 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+    show: true,
     webPreferences: {
       nodeIntegration: true,
     },
   });
-
-  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
-    blocker.enableBlockingInSession(session.defaultSession);
-    blocker.enableBlockingInSession(win.webContents.session);
-    // and load the index.html of the app.
-    win.loadFile("index.html");
-  });
+  win.loadFile("index.html");
 }
 
 // This method will be called when Electron has finished
@@ -40,13 +35,45 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 }
 
+function connectRedis() {
+  redisClient = redis.createClient({
+    host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
+  });
+}
+
+function createPlayerWindow() {
+  const playerWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+    },
+  });
+
+  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+    blocker.enableBlockingInSession(session.defaultSession);
+    blocker.enableBlockingInSession(playerWindow.webContents.session);
+    // and load the index.html of the app.
+    playerWindow.loadFile("player.html");
+  });
+}
+
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ElectronBlocker.fromLists(fetch, [
     "https://easylist.to/easylist/easylist.txt",
   ]).then(() => {
+    connectRedis();
+    redisClient.get("foo", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      console.log(data);
+    });
     createTray();
     createWindow();
+    createPlayerWindow();
   });
 });
 
@@ -62,7 +89,7 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
+  if (BrowserWindow.getAllWindows().length === 1) {
     createWindow();
   }
 });
