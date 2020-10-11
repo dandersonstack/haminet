@@ -1,13 +1,15 @@
-const { app, BrowserWindow, Tray } = require("electron");
+const { app, BrowserWindow, Tray, Menu, session } = require("electron");
 const path = require("path");
+const redis = require("redis");
+const { ElectronBlocker } = require("@cliqz/adblocker-electron");
+const { fetch } = require("cross-fetch");
 
 const assetsDirectory = path.join(__dirname, "assets");
 
 let tray = undefined;
+let redisClient = undefined;
 
 function createWindow() {
-  // Create the browser window.
-  console.log(assetsDirectory);
   const win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -16,20 +18,37 @@ function createWindow() {
     },
   });
 
-  // and load the index.html of the app.
-  win.loadFile("index.html");
-
-  // Open the DevTools.
-  win.webContents.openDevTools();
-
-  console.log("fuck");
-  tray = new Tray(path.join(assetsDirectory, "foo.png"));
+  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+    blocker.enableBlockingInSession(session.defaultSession);
+    blocker.enableBlockingInSession(win.webContents.session);
+    // and load the index.html of the app.
+    win.loadFile("index.html");
+  });
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
+function createTray() {
+  tray = new Tray(path.join(assetsDirectory, "foo.png"));
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "🎭 Available", type: "radio" },
+    { label: "🙉 Concentrated", type: "radio" },
+    { label: "🚽 Not here", type: "radio", checked: true },
+  ]);
+  // tray.setToolTip("This is my application.");
+  tray.setContextMenu(contextMenu);
+}
+
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  ElectronBlocker.fromLists(fetch, [
+    "https://easylist.to/easylist/easylist.txt",
+  ]).then(() => {
+    createTray();
+    createWindow();
+  });
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
