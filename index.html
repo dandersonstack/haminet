@@ -55,11 +55,7 @@
     <script>
       window.jQuery = window.$ = require("jquery");
     </script>
-    <script>
-      require("electron").ipcRenderer.on("youtube:id", (event, message) => {
-        player.loadVideoById(message, 0);
-      });
-    </script>
+    <script></script>
     <script
       src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
       integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
@@ -83,12 +79,20 @@
       var player;
       function onYouTubeIframeAPIReady() {
         player = new YT.Player("player", {
-          height: "400",
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          cc_load_policy: 1,
           width: "100%",
-          // videoId: "HMfMNA1j0Eo",
+          iv_load_policy: 3,
+          modestbranding: 1,
+          playsinline: 1,
+          enablecastapi: 0,
+          rel: 0,
+          showinfo: 0,
           events: {
             onReady: onPlayerReady,
-            // onStateChange: onPlayerStateChange,
+            onStateChange: onPlayerStateChange,
           },
         });
       }
@@ -96,7 +100,58 @@
       // 4. The API will call this function when the video player is ready.
       function onPlayerReady(event) {
         // event.target.playVideo();
-        event.target.seekTo(3234324220);
+        // event.target.seekTo(0);
+
+        require("electron").ipcRenderer.on("youtube:id", (event, message) => {
+          let { id, timestamp, seek } = message;
+          let elapsed = (Date.now() - timestamp) / 1000;
+          player.loadVideoById(id, elapsed + seek);
+        });
+      }
+
+      let previousAction;
+      let previousTime;
+
+      function onPlayerStateChange({ target, data }) {
+        console.error("state", data);
+        const currentTime = target.getCurrentTime();
+        if (previousAction) {
+          if (data === 3 && previousAction === 2) {
+            let re = /[\?\&]v=(\w+)(?:&|$)/;
+            let youtubeLink = player.getVideoUrl();
+            let match = re.exec(youtubeLink);
+            console.log(youtubeLink, match);
+            let youtube_id = match[1];
+            require("electron").ipcRenderer.send("youtube:id", {
+              id: youtube_id,
+              timestamp: Date.now(),
+              seek: player.getCurrentTime(),
+            });
+          }
+        }
+        previousTime = currentTime;
+        previousAction = data;
+
+        return;
+        // if (data != 3) {
+        //   // we don't need to detect buffering
+        //   return;
+        // }
+        //
+        //         console.log(Math.abs(previousTime - currentTime))
+        //
+        // // detect existing action and previous action which is not paused
+        // if (!previousAction || previousAction != 2) {
+        //   // return existing youtube api data (-1 || 0 || 1 || 5 )
+        //   return data;
+        // } else if (Math.abs(previousTime - currentTime) > 1) {
+        //   // we have Seek event and we have time when it was started(previousTime). Also we have finish time of Seek event(currentTime).
+        //   alert("Seek");
+        //   return "seek"
+        // }
+        //
+        // previousTime = currentTime;
+        // previousAction = data;
       }
 
       document
@@ -109,17 +164,25 @@
           player.setVolume(event.target.value);
         });
 
+      // var youtube_id;
+      // var youtube_timestamp;
+      // var youtube_seek;
+
       document
         .getElementById("youtube-set")
         .addEventListener("submit", (event) => {
           event.preventDefault();
-          let re = /[\?\&]v=(\w+)[$&]/;
+          let re = /[\?\&]v=(\w+)(?:&|$)/;
           let youtubeLink = document.getElementById("youtube-link").value;
           let match = re.exec(youtubeLink);
           let youtube_id = match[1];
           player.loadVideoById(youtube_id, 0);
 
-          require("electron").ipcRenderer.send("youtube:id", youtube_id);
+          require("electron").ipcRenderer.send("youtube:id", {
+            id: youtube_id,
+            timestamp: Date.now(),
+            seek: 0,
+          });
         });
       //
       // // 5. The API calls this function when the player's state changes.

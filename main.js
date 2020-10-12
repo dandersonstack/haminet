@@ -35,19 +35,41 @@ function createWindow() {
       nodeIntegration: true,
     },
   });
-  win.loadFile("index.html").then(() => {});
+
+  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+    blocker.enableBlockingInSession(session.defaultSession);
+    blocker.enableBlockingInSession(win.webContents.session);
+    // and load the index.html of the app.
+    // win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    // win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    win.loadFile("index.html");
+  });
+
+  // win.loadFile("index.html").then(() => {});
 
   win.webContents.on("did-finish-load", () => {
     redisClient.get("youtube:id", (err, data) => {
       if (err) {
         throw err;
       }
-      win.webContents.send("youtube:id", data);
-      ipcMain.on("youtube:id", (event, input, output) => {
-        let youtube_id = input;
-        redisClient.set("youtube:id", youtube_id, (err, data) => {});
-      });
+      win.webContents.send("youtube:id", JSON.parse(data));
     });
+  });
+
+  ipcMain.on("youtube:id", (event, input, output) => {
+    // let timestamp = Date.now();
+    redisClient.set("youtube:id", JSON.stringify(input), (err, data) => {
+      if (err) {
+        throw err;
+      }
+    });
+  });
+
+  win.on("close", (event) => {
+    if (win.isVisible()) {
+      event.preventDefault();
+      win.hide();
+    }
   });
 }
 
@@ -108,11 +130,14 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
+  if (!win.isVisible()) {
+    win.show();
+  }
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 1) {
-    createWindow();
-  }
+  // if (BrowserWindow.getAllWindows().length === 0) {
+  //   createWindow();
+  // }
 });
 
 // In this file you can include the rest of your app's specific main process
