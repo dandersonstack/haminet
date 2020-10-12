@@ -24,6 +24,7 @@ const assetsDirectory = path.join(__dirname, "assets");
 let win = undefined;
 let tray = undefined;
 let redisClient = undefined;
+let lastPublishedTimestamp = undefined;
 
 function createWindow() {
   let display = screen.getPrimaryDisplay();
@@ -69,6 +70,20 @@ function createWindow() {
         throw err;
       }
     });
+    lastPublishedTimestamp = Date.now();
+    redisClient.publish(
+      "foo",
+      JSON.stringify({
+        msgType: "youtube:change",
+        timestamp: lastPublishedTimestamp,
+        data: input,
+      }),
+      (err, data) => {
+        if (err) {
+          throw err;
+        }
+      }
+    );
   });
 
   win.on("close", (event) => {
@@ -106,6 +121,22 @@ function connectRedis() {
   redisClient = redis.createClient({
     host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
   });
+
+  redisClientSubscriber = redis.createClient({
+    host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
+  });
+
+  redisClientSubscriber.on("message", (channel, message) => {
+    let { timestamp, msgType, data } = JSON.parse(message);
+
+    // Skip messages that we published
+    if (timestamp === lastPublishedTimestamp) return;
+
+    if (msgType === "youtube:change") {
+      win.webContents.send("youtube:id", data);
+    }
+  });
+  redisClientSubscriber.subscribe("foo");
 }
 
 // Some APIs can only be used after this event occurs.
