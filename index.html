@@ -121,7 +121,7 @@
         const currentTime = target.getCurrentTime();
         if (previousAction) {
           if (data === 3 && previousAction === 2) {
-            let re = /[\?\&]v=(\w+)(?:&|$)/;
+            let re = /[\?\&]v=([\w\-]+)(?:&|$)/;
             let youtubeLink = player.getVideoUrl();
             let match = re.exec(youtubeLink);
             console.log(youtubeLink, match);
@@ -154,7 +154,7 @@
         .getElementById("youtube-set")
         .addEventListener("submit", (event) => {
           event.preventDefault();
-          let re = /[\?\&]v=(\w+)(?:&|$)/;
+          let re = /[\?\&]v=([\w\-]+)(?:&|$)/;
           let youtubeLink = document.getElementById("youtube-link").value;
           let match = re.exec(youtubeLink);
           let youtube_id = match[1];
