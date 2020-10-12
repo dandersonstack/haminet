@@ -48,8 +48,7 @@ function createWindow() {
     blocker.enableBlockingInSession(win.webContents.session);
     // and load the index.html of the app.
     // win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    // win.loadFile("index.html");
+    win.loadFile("index.html");
   });
 
   // win.loadFile("index.html").then(() => {});
@@ -126,8 +125,22 @@ function connectRedis() {
     host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
   });
 
+  function updatePeopleCounts() {
+    redisClient.pubsub("NUMSUB", "foo", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      let [channel, nSubscribers] = data;
+      win.webContents.send("nSubscribers", nSubscribers);
+    });
+  }
+  updatePeopleCounts();
+  setInterval(updatePeopleCounts, 3000);
+
   redisClientSubscriber.on("message", (channel, message) => {
     let { timestamp, msgType, data } = JSON.parse(message);
+
+    console.error(timestamp, msgType, data);
 
     // Skip messages that we published
     if (timestamp === lastPublishedTimestamp) return;
