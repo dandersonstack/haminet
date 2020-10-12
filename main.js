@@ -47,8 +47,8 @@ function createWindow() {
     blocker.enableBlockingInSession(win.webContents.session);
     // and load the index.html of the app.
     // win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    // win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    win.loadFile("index.html");
+    win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    // win.loadFile("index.html");
   });
 
   // win.loadFile("index.html").then(() => {});
