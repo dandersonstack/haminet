@@ -1,5 +1,6 @@
 const {
   app,
+  screen,
   BrowserWindow,
   Tray,
   Menu,
@@ -10,13 +11,13 @@ const path = require("path");
 const redis = require("redis");
 const { ElectronBlocker } = require("@cliqz/adblocker-electron");
 const { fetch } = require("cross-fetch");
-
-require("electron-reload")(__dirname, {
-  electron: path.join(
-    __dirname,
-    "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
-  ),
-});
+//
+// require("electron-reload")(__dirname, {
+//   electron: path.join(
+//     __dirname,
+//     "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+//   ),
+// });
 
 const assetsDirectory = path.join(__dirname, "assets");
 
@@ -25,9 +26,14 @@ let tray = undefined;
 let redisClient = undefined;
 
 function createWindow() {
+  let display = screen.getPrimaryDisplay();
+  let width = display.bounds.width;
+
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 500,
+    height: 300,
+    x: width - 500,
+    y: 0,
     // frame: false,
     // transparent: true,
     show: true,
@@ -77,14 +83,23 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 function createTray() {
   tray = new Tray(path.join(assetsDirectory, "foo.png"));
+  tray.setIgnoreDoubleClickEvents(true);
+  //
+  // const contextMenu = Menu.buildFromTemplate([
+  //   { label: "🎭 Availables", type: "radio" },
+  //   { label: "🙉 Concentrated", type: "radio" },
+  //   { label: "🚽 Not here", type: "radio", checked: true },
+  // ]);
+  // // tray.setToolTip("This is my application.");
+  // tray.setContextMenu(contextMenu);
 
-  const contextMenu = Menu.buildFromTemplate([
-    { label: "🎭 Availables", type: "radio" },
-    { label: "🙉 Concentrated", type: "radio" },
-    { label: "🚽 Not here", type: "radio", checked: true },
-  ]);
-  // tray.setToolTip("This is my application.");
-  tray.setContextMenu(contextMenu);
+  tray.on("click", function (e) {
+    if (win.isVisible()) {
+      win.hide();
+    } else {
+      win.show();
+    }
+  });
 }
 
 function connectRedis() {
@@ -93,31 +108,11 @@ function connectRedis() {
   });
 }
 
-function createPlayerWindow() {
-  const playerWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    show: false,
-    webPreferences: {
-      nodeIntegration: true,
-    },
-  });
-
-  ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
-    blocker.enableBlockingInSession(session.defaultSession);
-    blocker.enableBlockingInSession(playerWindow.webContents.session);
-    // and load the index.html of the app.
-    playerWindow.loadFile("player.html");
-  });
-}
-
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   connectRedis();
   createTray();
   createWindow();
-
-  // createPlayerWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

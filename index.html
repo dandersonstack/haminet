@@ -21,11 +21,17 @@
   </head>
   <body>
     <div class="container-fluid">
-      <div><h1>Haminet</h1></div>
       <div class="row">
-        <div class="col-8"><div id="player" class="rounded"></div></div>
         <div class="col-4">
           <form id="youtube-set">
+            <div class="form-group">
+              <input
+                id="volume-slider"
+                type="range"
+                style="width: 100%"
+                value="100"
+              />
+            </div>
             <div class="form-group">
               <input
                 type="text"
@@ -33,22 +39,14 @@
                 aria-describedby="emailHelp"
                 placeholder="Youtube link"
                 id="youtube-link"
-              /><input
-                id="volume-slider"
-                type="range"
-                orient="vertical"
-                style="-webkit-appearance: slider-vertical"
               />
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <!--            <button type="submit" class="btn btn-primary">Submit</button>-->
           </form>
+          <div><h1>Haminet</h1></div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col">1 of 3</div>
-        <div class="col">2 of 3</div>
-        <div class="col">3 of 3</div>
+        <div class="col-8"><div id="player" class="rounded"></div></div>
       </div>
     </div>
 
@@ -84,6 +82,7 @@
           disablekb: 1,
           cc_load_policy: 1,
           width: "100%",
+          height: 200,
           iv_load_policy: 3,
           modestbranding: 1,
           playsinline: 1,
@@ -102,6 +101,12 @@
         // event.target.playVideo();
         // event.target.seekTo(0);
 
+        let currentVolume = player.getVolume();
+        if (player.isMuted()) {
+          currentVolume = 0;
+        }
+        document.getElementById("volume-slider").value = currentVolume;
+
         require("electron").ipcRenderer.on("youtube:id", (event, message) => {
           let { id, timestamp, seek } = message;
           let elapsed = (Date.now() - timestamp) / 1000;
@@ -113,7 +118,6 @@
       let previousTime;
 
       function onPlayerStateChange({ target, data }) {
-        console.error("state", data);
         const currentTime = target.getCurrentTime();
         if (previousAction) {
           if (data === 3 && previousAction === 2) {
@@ -131,27 +135,6 @@
         }
         previousTime = currentTime;
         previousAction = data;
-
-        return;
-        // if (data != 3) {
-        //   // we don't need to detect buffering
-        //   return;
-        // }
-        //
-        //         console.log(Math.abs(previousTime - currentTime))
-        //
-        // // detect existing action and previous action which is not paused
-        // if (!previousAction || previousAction != 2) {
-        //   // return existing youtube api data (-1 || 0 || 1 || 5 )
-        //   return data;
-        // } else if (Math.abs(previousTime - currentTime) > 1) {
-        //   // we have Seek event and we have time when it was started(previousTime). Also we have finish time of Seek event(currentTime).
-        //   alert("Seek");
-        //   return "seek"
-        // }
-        //
-        // previousTime = currentTime;
-        // previousAction = data;
       }
 
       document
@@ -160,7 +143,6 @@
           if (event.target.value > 0) {
             player.unMute();
           }
-          console.error(event.target.value);
           player.setVolume(event.target.value);
         });
 
