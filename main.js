@@ -3,7 +3,6 @@ const {
   screen,
   BrowserWindow,
   Tray,
-  Menu,
   session,
   ipcMain,
 } = require("electron");
@@ -11,17 +10,23 @@ const path = require("path");
 const redis = require("redis");
 const { ElectronBlocker } = require("@cliqz/adblocker-electron");
 const { fetch } = require("cross-fetch");
-//
-// require("electron-reload")(__dirname, {
-//   electron: path.join(
-//     __dirname,
-//     "node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
-//   ),
-// });
+const { menubar } = require("menubar");
 
 const assetsDirectory = path.join(__dirname, "assets");
 
-let win = undefined;
+const mb = menubar({
+  preloadWindow: true,
+  icon: path.join(assetsDirectory, "foo.png"),
+  browserWindow: {
+    icon: path.join(assetsDirectory, "foo.png"),
+    webPreferences: {
+      nodeIntegration: true,
+    },
+  },
+});
+
+// Global Objects
+let mainWindow = undefined;
 let tray = undefined;
 let redisClient = undefined;
 let lastPublishedTimestamp = undefined;
@@ -30,35 +35,38 @@ function createWindow() {
   let display = screen.getPrimaryDisplay();
   let width = display.bounds.width;
 
-  win = new BrowserWindow({
-    width: 500,
-    height: 300,
-    x: width - 500,
-    y: 0,
-    // frame: false,
-    // transparent: true,
-    show: true,
-    webPreferences: {
-      nodeIntegration: true,
-    },
-  });
+  mainWindow = mb.window;
+
+  // mainWindow = new BrowserWindow({
+  //   width: 500,
+  //   height: 320,
+  //   x: width - 500,
+  //   y: 0,
+  //   frame: false,
+  //   transparent: true,
+  //   titleBarStyle: "hidden",
+  //   show: true,
+  //   webPreferences: {
+  //     nodeIntegration: true,
+  //   },
+  // });
 
   ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
     blocker.enableBlockingInSession(session.defaultSession);
-    blocker.enableBlockingInSession(win.webContents.session);
+    blocker.enableBlockingInSession(mainWindow.webContents.session);
     // and load the index.html of the app.
-    win.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    // win.loadFile("index.html");
+    // mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    mainWindow.loadFile("index.html");
   });
 
-  // win.loadFile("index.html").then(() => {});
+  // mainWindow.loadFile("index.html").then(() => {});
 
-  win.webContents.on("did-finish-load", () => {
+  mainWindow.webContents.on("did-finish-load", () => {
     redisClient.get("youtube:id", (err, data) => {
       if (err) {
         throw err;
       }
-      win.webContents.send("youtube:id", JSON.parse(data));
+      mainWindow.webContents.send("youtube:id", JSON.parse(data));
     });
   });
 
@@ -85,12 +93,12 @@ function createWindow() {
     );
   });
 
-  win.on("close", (event) => {
-    if (win.isVisible()) {
-      event.preventDefault();
-      win.hide();
-    }
-  });
+  // mainWindow.on("close", (event) => {
+  //   if (mainWindow.isVisible()) {
+  //     event.preventDefault();
+  //     mainWindow.hide();
+  //   }
+  // });
 }
 
 // This method will be called when Electron has finished
@@ -108,10 +116,10 @@ function createTray() {
   // tray.setContextMenu(contextMenu);
 
   tray.on("click", function (e) {
-    if (win.isVisible()) {
-      win.hide();
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
     } else {
-      win.show();
+      mainWindow.show();
     }
   });
 }
@@ -131,7 +139,7 @@ function connectRedis() {
         throw err;
       }
       let [channel, nSubscribers] = data;
-      win.webContents.send("nSubscribers", nSubscribers);
+      mainWindow.webContents.send("nSubscribers", nSubscribers);
     });
   }
   updatePeopleCounts();
@@ -146,7 +154,7 @@ function connectRedis() {
     if (timestamp === lastPublishedTimestamp) return;
 
     if (msgType === "youtube:change") {
-      win.webContents.send("youtube:id", data);
+      mainWindow.webContents.send("youtube:id", data);
     }
   });
   redisClientSubscriber.subscribe("foo");
@@ -155,7 +163,7 @@ function connectRedis() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   connectRedis();
-  createTray();
+  // createTray();
   createWindow();
 });
 
@@ -169,8 +177,8 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-  if (!win.isVisible()) {
-    win.show();
+  if (!mainWindow.isVisible()) {
+    mainWindow.show();
   }
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
