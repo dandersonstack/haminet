@@ -11,6 +11,32 @@ const redis = require("redis");
 const { ElectronBlocker } = require("@cliqz/adblocker-electron");
 const { fetch } = require("cross-fetch");
 const { menubar } = require("menubar");
+const crypto = require("crypto");
+
+// const iv = crypto.randomBytes(16);
+// function encrypt(text) {
+//  let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+//  let encrypted = cipher.update(text);
+//  encrypted = Buffer.concat([encrypted, cipher.final()]);
+//  return { iv: iv.toString('hex'), encryptedData: encrypted.toString('hex') };
+// }
+
+const key = crypto.scryptSync("ORIMOTI_420_PRAISE_RUHAMA", "hamin", 32);
+
+function decrypt(text) {
+  let iv = Buffer.from(text.iv, "hex");
+  let encryptedText = Buffer.from(text.encryptedData, "hex");
+  let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(key), iv);
+  let decrypted = decipher.update(encryptedText);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString();
+}
+
+const redis_server_address = decrypt({
+  iv: "17f9dd9768409458f00b773ffab1a735",
+  encryptedData:
+    "18aa995315e41eacd1f096846225c90165f281d36a67536c3ee53df73d7d2218c9bdc06a0a73e07e4e796c77584bf54c07081d56c7a998978f985db3591b6952f523b6a7bd58eba204c69b8cdf9b0be6aae6f5ad9cd659a7ff566e3d94c96c86fe04a31b69671e000d30c5f1e8ace30a",
+});
 
 const assetsDirectory = path.join(__dirname, "assets");
 
@@ -125,13 +151,9 @@ function createTray() {
 }
 
 function connectRedis() {
-  redisClient = redis.createClient({
-    host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
-  });
+  redisClient = redis.createClient(redis_server_address);
 
-  redisClientSubscriber = redis.createClient({
-    host: "haminet.9agqsm.0001.usw2.cache.amazonaws.com",
-  });
+  redisClientSubscriber = redis.createClient(redis_server_address);
 
   function updatePeopleCounts() {
     redisClient.pubsub("NUMSUB", "foo", (err, data) => {
