@@ -82,8 +82,8 @@ function createWindow() {
     blocker.enableBlockingInSession(session.defaultSession);
     blocker.enableBlockingInSession(mainWindow.webContents.session);
     // and load the index.html of the app.
-    // mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    mainWindow.loadFile("index.html");
+    mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    // mainWindow.loadFile("index.html");
   });
 
   // mainWindow.loadFile("index.html").then(() => {});
@@ -121,9 +121,6 @@ function createWindow() {
   });
 
   ipcMain.on("hamin_story:url", (event, input, output) => {
-    console.error("ON hamin_story:url")
-    console.error(input);
-
     lastPublishedTimestamp = Date.now();
 
     redisClient.set("hamin_story:current", JSON.stringify(input), (err, data) => {
@@ -141,10 +138,6 @@ function createWindow() {
   //   }
   // });
 }
-
-// function registerHaminStoryBtn(){
-//
-// }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -200,6 +193,8 @@ function connectRedis() {
 
   redisClientSubscriber.on("message", (channel, message) => {
     let { timestamp, msgType, data } = JSON.parse(message);
+
+    console.error(timestamp, msgType, data);
 
     if (msgType === "hamin_story:add") {
       mainWindow.webContents.send("hamin_story:new", data)

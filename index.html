@@ -404,9 +404,7 @@
                       console.log(response);
 
                       var urls = [response["display_url"]]
-                      // urls += getCurrentHaminStory();
 
-                      // var all_photo_urls = [];
                       var elements = document.getElementsByClassName("rounded");
 
                       var item_n = 0;
@@ -439,20 +437,6 @@
           console.log(err)
         });
       });
-
-      function getCurrentHaminStory()
-      {
-        var all_photo_urls = [];
-        var elements = document.getElementsByClassName("rounded");
-
-        for (var el in elements)
-        {
-          var current_photo = elements[el];
-          all_photo_urls.push(current_photo.src);
-        }
-
-        return all_photo_urls;
-      }
 
     </script>
   </body>
