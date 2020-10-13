@@ -25,6 +25,7 @@
     "@cliqz/adblocker-electron": "^1.18.3",
     "@zoomus/websdk": "^1.8.1",
     "cross-fetch": "^3.0.6",
+    "imgbb-uploader": "^1.1.0",
     "menubar": "^9.0.1",
     "redis": "^3.0.2"
   }

@@ -47,6 +47,7 @@ const mb = menubar({
     icon: path.join(assetsDirectory, "foo.png"),
     webPreferences: {
       nodeIntegration: true,
+      enableRemoteModule: true
     },
   },
 });
@@ -81,8 +82,8 @@ function createWindow() {
     blocker.enableBlockingInSession(session.defaultSession);
     blocker.enableBlockingInSession(mainWindow.webContents.session);
     // and load the index.html of the app.
-    mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    // mainWindow.loadFile("index.html");
+    // mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
+    mainWindow.loadFile("index.html");
   });
 
   // mainWindow.loadFile("index.html").then(() => {});
@@ -119,6 +120,20 @@ function createWindow() {
     );
   });
 
+  ipcMain.on("hamin_story:url", (event, input, output) => {
+    console.error("ON hamin_story:url")
+    console.error(input);
+
+    lastPublishedTimestamp = Date.now();
+
+    redisClient.set("hamin_story:current", JSON.stringify(input), (err, data) => {
+      if (err) {
+        throw err;
+      }
+    });
+
+  });
+
   // mainWindow.on("close", (event) => {
   //   if (mainWindow.isVisible()) {
   //     event.preventDefault();
@@ -126,6 +141,10 @@ function createWindow() {
   //   }
   // });
 }
+
+// function registerHaminStoryBtn(){
+//
+// }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -150,6 +169,19 @@ function createTray() {
   });
 }
 
+function getCurrentHaminStory() {
+  var photo_elements = document.getElementsByClassName("hamin_story_photos");
+}
+
+function updateHaminStory() {
+    redisClient.get("hamin_story:current", (err, data) => {
+      if (err) {
+        throw err;
+      }
+      mainWindow.webContents.send("hamin_story:new", JSON.parse(data));
+    });
+}
+
 function connectRedis() {
   redisClient = redis.createClient(redis_server_address);
 
@@ -167,10 +199,19 @@ function connectRedis() {
   updatePeopleCounts();
   setInterval(updatePeopleCounts, 3000);
 
+  updateHaminStory();
+  setInterval(updateHaminStory, 3000);
+
   redisClientSubscriber.on("message", (channel, message) => {
     let { timestamp, msgType, data } = JSON.parse(message);
 
     console.error(timestamp, msgType, data);
+
+    console.error("MSG TYPE" + msgType);
+
+    if (msgType === "hamin_story:add") {
+      mainWindow.webContents.send("hamin_story:new", data)
+    }
 
     // Skip messages that we published
     if (timestamp === lastPublishedTimestamp) return;
@@ -178,6 +219,7 @@ function connectRedis() {
     if (msgType === "youtube:change") {
       mainWindow.webContents.send("youtube:id", data);
     }
+
   });
   redisClientSubscriber.subscribe("foo");
 }
