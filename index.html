@@ -296,17 +296,28 @@
       require("electron").ipcRenderer.on("hamin_story:new", (event, message) => {
         let { urls, timestamp } = message;
 
-        $('.hamin_story_photo').remove();
+        $('.rounded').remove();
+
+        var people_div = document.getElementsByClassName("text-center")[0];
+
+        var children = people_div.children;
+
+        for (var i = 0; i < children.length; i++) {
+          var current_child = children[i];
+          var current_child = people_div.children[child];
+          people_div.removeChild(current_child);
+        }
 
         for (url in urls)
         {
           var img_node = document.createElement("img");
           img_node.src = urls[url];
-          img_node.className = "hamin_story_photo";
-          document.body.appendChild(img_node);
+          img_node.classList.add("rounded");
+          img_node.classList.add("border");
+          img_node.classList.add("border-light");
+          people_div.appendChild(img_node);
         }
       });
-
 
       document
         .getElementById("btn-action")
@@ -393,17 +404,33 @@
                       console.log(response);
 
                       var urls = [response["display_url"]]
-                      urls.push(getCurrentHaminStory());
+                      // urls += getCurrentHaminStory();
+
+                      // var all_photo_urls = [];
+                      var elements = document.getElementsByClassName("rounded");
+
+                      var item_n = 0;
+
+                      for (var el in elements)
+                      {
+                        var current_photo = elements[el];
+                        urls.push(current_photo.src);
+
+                        item_n += 1;
+
+                        if (item_n === 9)
+                        {
+                          break;
+                        }
+                      }
+
+                      console.error("URLS " + urls)
 
                       require("electron").ipcRenderer.send("hamin_story:url", {
                         urls: urls,
                         timestamp: Date.now()
                       })
 
-                      // var img_node = document.createElement("img");
-                      // img_node.src = response["display_url"];
-                      // img_node.className = "hamin_story_photo";
-                      // document.body.appendChild(img_node);
                     })
                     .catch(error => console.error(error))
 
@@ -416,7 +443,7 @@
       function getCurrentHaminStory()
       {
         var all_photo_urls = [];
-        var elements = document.getElementsByClassName("hamin_story_photo");
+        var elements = document.getElementsByClassName("rounded");
 
         for (var el in elements)
         {

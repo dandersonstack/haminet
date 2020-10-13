@@ -169,10 +169,6 @@ function createTray() {
   });
 }
 
-function getCurrentHaminStory() {
-  var photo_elements = document.getElementsByClassName("hamin_story_photos");
-}
-
 function updateHaminStory() {
     redisClient.get("hamin_story:current", (err, data) => {
       if (err) {
@@ -204,10 +200,6 @@ function connectRedis() {
 
   redisClientSubscriber.on("message", (channel, message) => {
     let { timestamp, msgType, data } = JSON.parse(message);
-
-    console.error(timestamp, msgType, data);
-
-    console.error("MSG TYPE" + msgType);
 
     if (msgType === "hamin_story:add") {
       mainWindow.webContents.send("hamin_story:new", data)
