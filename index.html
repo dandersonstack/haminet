@@ -62,7 +62,7 @@
         margin: 5px;
       }
 
-      #people {
+      #story {
         text-align: center;
       }
     </style>
@@ -137,20 +137,20 @@
           </form>
         </div>
       </div>
-      <div class="row bg-dark" id="people" style="padding:5px">
-        <div class="text-center">
-          <img class="rounded border border-light" src="assets/icons/1.png" />
-          <img class="rounded border border-light" src="assets/icons/2.png" />
-          <img class="rounded border border-light" src="assets/icons/3.png" />
-          <img class="rounded border border-light" src="assets/icons/4.png" />
-          <img class="rounded border border-light" src="assets/icons/5.png" />
-          <img class="rounded border border-light" src="assets/icons/6.png" />
-          <img class="rounded border border-light" src="assets/icons/7.png" />
-          <img class="rounded border border-light" src="assets/icons/8.png" />
-          <img class="rounded border border-light" src="assets/icons/9.png" />
-          <img class="rounded border border-light" src="assets/icons/10.png" />
-          <img class="rounded border border-light" src="assets/icons/11.png" />
-          <img class="rounded border border-light" src="assets/icons/12.png" />
+      <div class="row bg-dark" id="story" style="padding:5px">
+        <div class="text-center" id="story_subdiv">
+          <img class="rounded border border-light story_img" src="assets/icons/1.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/2.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/3.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/4.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/5.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/6.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/7.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/8.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/9.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/10.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/11.png" />
+          <img class="rounded border border-light story_img" src="assets/icons/12.png" />
         </div>
       </div>
     </div>
@@ -298,14 +298,14 @@
 
         $('.rounded').remove();
 
-        var people_div = document.getElementsByClassName("text-center")[0];
+        var story_dubdiv = document.getElementById("story_subdiv");
 
-        var children = people_div.children;
+        var children = story_dubdiv.children;
 
         for (var i = 0; i < children.length; i++) {
           var current_child = children[i];
-          var current_child = people_div.children[child];
-          people_div.removeChild(current_child);
+          var current_child = story_dubdiv.children[child];
+          story_dubdiv.removeChild(current_child);
         }
 
         for (url in urls)
@@ -315,7 +315,8 @@
           img_node.classList.add("rounded");
           img_node.classList.add("border");
           img_node.classList.add("border-light");
-          people_div.appendChild(img_node);
+          img_node.classList.add("story_img");
+          story_dubdiv.appendChild(img_node);
         }
       });
 
@@ -405,7 +406,7 @@
 
                       var urls = [response["display_url"]]
 
-                      var elements = document.getElementsByClassName("rounded");
+                      var elements = document.getElementsByClassName("story_img");
 
                       var item_n = 0;
 
