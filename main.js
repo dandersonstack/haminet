@@ -42,7 +42,7 @@ const redis_server_address = decrypt({
 const assetsDirectory = path.join(__dirname, "assets");
 
 const mb = menubar({
-  // index: "https://drorwolmer.github.io/haminet/",
+  index: "https://drorwolmer.github.io/haminet/",
   preloadWindow: true,
   icon: path.join(assetsDirectory, "foo.png"),
   browserWindow: {
