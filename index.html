@@ -79,7 +79,7 @@
       </div>
       <!-- Navbar content -->
     </nav>
-    <div class="container-fluid" >
+    <div class="container-fluid">
       <div class="row bg-light" style="padding-top: 10px">
         <div class="col-4">
           <form>
@@ -137,7 +137,7 @@
           </form>
         </div>
       </div>
-      <div class="row bg-dark" id="people" style="padding:5px">
+      <div class="row bg-dark" id="people" style="padding: 5px">
         <div class="text-center">
           <img class="rounded border border-light" src="assets/icons/1.png" />
           <img class="rounded border border-light" src="assets/icons/2.png" />
@@ -169,161 +169,202 @@
       integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
       crossorigin="anonymous"
     ></script>
-    <script>
-      // 2. This code loads the IFrame Player API code asynchronously.
-      var tag = document.createElement("script");
+  </body>
+  <script>
+    const ipcRenderer = require("electron").ipcRenderer;
 
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    let lastPublishedTimestamp = undefined;
 
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player("player", {
-          autoplay: 0,
-          controls: 0,
-          disablekb: 1,
-          cc_load_policy: 1,
-          width: "100%",
-          height: 200,
-          iv_load_policy: 3,
-          modestbranding: 1,
-          playsinline: 1,
-          enablecastapi: 0,
-          rel: 0,
-          showinfo: 0,
-          events: {
-            onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange,
-          },
-        });
-      }
+    // 2. This code loads the IFrame Player API code asynchronously.
+    var tag = document.createElement("script");
 
-      // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        // event.target.playVideo();
-        // event.target.seekTo(0);
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName("script")[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-        let currentVolume = player.getVolume();
-        if (player.isMuted()) {
-          currentVolume = 0;
+    // 3. This function creates an <iframe> (and YouTube player)
+    //    after the API code downloads.
+    var player;
+    function onYouTubeIframeAPIReady() {
+      ipcRenderer.invoke("subscribe", "foo");
+      ipcRenderer.on("foo", (event, args) => {
+        let { msgType, timestamp, data } = args;
+
+        // If we published this message than we can ignore it
+        if (timestamp === lastPublishedTimestamp) return;
+
+        if (msgType === "youtube:change") {
+          changeYoutubeVideo(data.timestamp, data.id, data.seek);
         }
-        document.getElementById("volume-slider").value = currentVolume;
+      });
 
-        require("electron").ipcRenderer.on("youtube:id", (event, message) => {
-          let { id, timestamp, seek } = message;
-          let elapsed = (Date.now() - timestamp) / 1000;
-          player.loadVideoById(id, elapsed + seek);
+      player = new YT.Player("player", {
+        autoplay: 0,
+        controls: 0,
+        disablekb: 1,
+        cc_load_policy: 1,
+        width: "100%",
+        height: 200,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        playsinline: 1,
+        enablecastapi: 0,
+        rel: 0,
+        showinfo: 0,
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange,
+        },
+      });
+    }
+
+    function changeYoutubeVideo(timestamp, id, seek) {
+      let elapsed = (Date.now() - timestamp) / 1000;
+      player.loadVideoById(id, elapsed + seek);
+    }
+
+    // 4. The API will call this function when the video player is ready.
+    function onPlayerReady(event) {
+      // event.target.playVideo();
+      // event.target.seekTo(0);
+
+      let currentVolume = player.getVolume();
+      if (player.isMuted()) {
+        currentVolume = 0;
+      }
+      document.getElementById("volume-slider").value = currentVolume;
+
+      ipcRenderer
+        .invoke("redis_get", "youtube:id")
+        .then(({ id, timestamp, seek }) => {
+          changeYoutubeVideo(timestamp, id, seek);
         });
 
-        require("electron").ipcRenderer.on("nSubscribers", (event, message) => {
-          let elm = document.getElementById("personCount");
-          elm.innerText = `${message}`;
-          elm.classList.remove("badge-warning");
-          elm.classList.add("badge-success");
-        });
+      function updatePeopleCount() {
+        ipcRenderer
+          .invoke("numsub", "foo")
+          .then(({ channel, nSubscribers }) => {
+            {
+              let elm = document.getElementById("personCount");
+              elm.innerText = `${nSubscribers}`;
+              elm.classList.remove("badge-warning");
+              elm.classList.add("badge-success");
+              setTimeout(updatePeopleCount, 3000);
+            }
+          });
       }
 
-      let previousAction;
-      let previousTime;
+      updatePeopleCount();
+    }
 
-      function onPlayerStateChange({ target, data }) {
-        const currentTime = target.getCurrentTime();
-        if (previousAction) {
-          if (data === 3 && previousAction === 2) {
-            let re = /[\?\&]v=([\w\-]+)(?:&|$)/;
-            let youtubeLink = player.getVideoUrl();
-            let match = re.exec(youtubeLink);
-            console.log(youtubeLink, match);
-            let youtube_id = match[1];
-            require("electron").ipcRenderer.send("youtube:id", {
-              id: youtube_id,
-              timestamp: Date.now(),
-              seek: player.getCurrentTime(),
-            });
-          }
+    let previousAction;
+    let previousTime;
+
+    function handleYoutubeSeek() {
+      let youtubeLink = player.getVideoUrl();
+      let match = /[\?\&]v=([\w\-]+)(?:&|$)/.exec(youtubeLink);
+      let youtube_id = match[1];
+
+      lastPublishedTimestamp = Date.now();
+      let msg_data = {
+        id: youtube_id,
+        timestamp: lastPublishedTimestamp,
+        seek: player.getCurrentTime(),
+      };
+
+      ipcRenderer.invoke("redis_set", ["youtube:id", msg_data]);
+      ipcRenderer.invoke("publish", [
+        "foo",
+        {
+          msgType: "youtube:change",
+          timestamp: lastPublishedTimestamp,
+          data: msg_data,
+        },
+      ]);
+    }
+
+    function onPlayerStateChange({ target, data }) {
+      const currentTime = target.getCurrentTime();
+      if (previousAction) {
+        if (data === 3 && previousAction === 2) {
+          handleYoutubeSeek();
         }
-        previousTime = currentTime;
-        previousAction = data;
       }
+      previousTime = currentTime;
+      previousAction = data;
+    }
 
-      document
-        .getElementById("volume-slider")
-        .addEventListener("input", (event) => {
-          if (event.target.value > 0) {
-            player.unMute();
-          }
-          player.setVolume(event.target.value);
-        });
+    document
+      .getElementById("volume-slider")
+      .addEventListener("input", (event) => {
+        if (event.target.value > 0) {
+          player.unMute();
+        }
+        player.setVolume(event.target.value);
+      });
 
-      // var youtube_id;
-      // var youtube_timestamp;
-      // var youtube_seek;
+    document
+      .getElementById("youtube-set")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        let re = /[\?\&]v=([\w\-]+)(?:&|$)/;
+        let youtubeLink = document.getElementById("youtube-link").value;
+        let match = re.exec(youtubeLink);
+        let youtube_id = match[1];
+        player.loadVideoById(youtube_id, 0);
 
-      document
-        .getElementById("youtube-set")
-        .addEventListener("submit", (event) => {
-          event.preventDefault();
-          let re = /[\?\&]v=([\w\-]+)(?:&|$)/;
-          let youtubeLink = document.getElementById("youtube-link").value;
-          let match = re.exec(youtubeLink);
-          let youtube_id = match[1];
-          player.loadVideoById(youtube_id, 0);
-
-          require("electron").ipcRenderer.send("youtube:id", {
+        ipcRenderer.invoke("redis_set", [
+          "youtube:id",
+          {
             id: youtube_id,
             timestamp: Date.now(),
             seek: 0,
-          });
+          },
+        ]);
+      });
+    //
+    // // 5. The API calls this function when the player's state changes.
+    // //    The function indicates that when playing a video (state=1),
+    // //    the player should play for six seconds and then stop.
+    // var done = false;
+    // function onPlayerStateChange(event) {
+    //   if (event.data == YT.PlayerState.PLAYING && !done) {
+    //     setTimeout(stopVideo, 6000);
+    //     done = true;
+    //   }
+    // }
+    // function stopVideo() {
+    //   player.stopVideo();
+    // }
+
+    document.getElementById("btn-action").addEventListener("click", (event) => {
+      console.log(Notification.permission);
+      // Let's check if the browser supports notifications
+      if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
+      }
+
+      // Let's check whether notification permissions have already been granted
+      else if (Notification.permission === "granted") {
+        // If it's okay let's create a notification
+        var notification = new Notification("Hi there!", {
+          silent: true,
         });
-      //
-      // // 5. The API calls this function when the player's state changes.
-      // //    The function indicates that when playing a video (state=1),
-      // //    the player should play for six seconds and then stop.
-      // var done = false;
-      // function onPlayerStateChange(event) {
-      //   if (event.data == YT.PlayerState.PLAYING && !done) {
-      //     setTimeout(stopVideo, 6000);
-      //     done = true;
-      //   }
-      // }
-      // function stopVideo() {
-      //   player.stopVideo();
-      // }
+        console.error(notification);
+      }
 
-      document
-        .getElementById("btn-action")
-        .addEventListener("click", (event) => {
-          console.log(Notification.permission);
-          // Let's check if the browser supports notifications
-          if (!("Notification" in window)) {
-            alert("This browser does not support desktop notification");
+      // Otherwise, we need to ask the user for permission
+      else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+          // If the user accepts, let's create a notification
+          if (permission === "granted") {
+            var notification = new Notification("Hi there!");
           }
-
-          // Let's check whether notification permissions have already been granted
-          else if (Notification.permission === "granted") {
-            // If it's okay let's create a notification
-            var notification = new Notification("Hi there!", {
-              silent: true,
-            });
-            console.error(notification);
-          }
-
-          // Otherwise, we need to ask the user for permission
-          else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(function (permission) {
-              // If the user accepts, let's create a notification
-              if (permission === "granted") {
-                var notification = new Notification("Hi there!");
-              }
-            });
-          }
-
-          // At last, if the user has denied notifications, and you
-          // want to be respectful there is no need to bother them any more.
         });
-    </script>
-  </body>
+      }
+
+      // At last, if the user has denied notifications, and you
+      // want to be respectful there is no need to bother them any more.
+    });
+  </script>
 </html>

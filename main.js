@@ -8,6 +8,7 @@ const {
 } = require("electron");
 const path = require("path");
 const redis = require("redis");
+const { promisify } = require("util");
 const { ElectronBlocker } = require("@cliqz/adblocker-electron");
 const { fetch } = require("cross-fetch");
 const { menubar } = require("menubar");
@@ -41,6 +42,7 @@ const redis_server_address = decrypt({
 const assetsDirectory = path.join(__dirname, "assets");
 
 const mb = menubar({
+  // index: "https://drorwolmer.github.io/haminet/",
   preloadWindow: true,
   icon: path.join(assetsDirectory, "foo.png"),
   browserWindow: {
@@ -53,139 +55,67 @@ const mb = menubar({
 
 // Global Objects
 let mainWindow = undefined;
-let tray = undefined;
 let redisClient = undefined;
+let redisClientSubscriber = undefined;
 let lastPublishedTimestamp = undefined;
 
 function createWindow() {
-  let display = screen.getPrimaryDisplay();
-  let width = display.bounds.width;
-
   mainWindow = mb.window;
-
-  // mainWindow = new BrowserWindow({
-  //   width: 500,
-  //   height: 320,
-  //   x: width - 500,
-  //   y: 0,
-  //   frame: false,
-  //   transparent: true,
-  //   titleBarStyle: "hidden",
-  //   show: true,
-  //   webPreferences: {
-  //     nodeIntegration: true,
-  //   },
-  // });
 
   ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
     blocker.enableBlockingInSession(session.defaultSession);
     blocker.enableBlockingInSession(mainWindow.webContents.session);
-    // and load the index.html of the app.
-    mainWindow.loadURL("https://drorwolmer.github.io/haminet/").then(() => {});
-    // mainWindow.loadFile("index.html");
   });
 
-  // mainWindow.loadFile("index.html").then(() => {});
+  const getAsync = promisify(redisClient.get).bind(redisClient);
+  const setAsync = promisify(redisClient.set).bind(redisClient);
+  const pubsubAsync = promisify(redisClient.pubsub).bind(redisClient);
+  const publishAsync = promisify(redisClient.publish).bind(redisClient);
 
-  mainWindow.webContents.on("did-finish-load", () => {
-    redisClient.get("youtube:id", (err, data) => {
-      if (err) {
-        throw err;
-      }
-      mainWindow.webContents.send("youtube:id", JSON.parse(data));
-    });
+  ipcMain.handle("redis_get", async (event, arg) => {
+    console.error(`redis_get(${arg})`);
+    let data = await getAsync(arg);
+    return JSON.parse(data);
   });
 
-  ipcMain.on("youtube:id", (event, input, output) => {
-    // let timestamp = Date.now();
-    redisClient.set("youtube:id", JSON.stringify(input), (err, data) => {
-      if (err) {
-        throw err;
-      }
-    });
-    lastPublishedTimestamp = Date.now();
-    redisClient.publish(
-      "foo",
-      JSON.stringify({
-        msgType: "youtube:change",
-        timestamp: lastPublishedTimestamp,
-        data: input,
-      }),
-      (err, data) => {
-        if (err) {
-          throw err;
-        }
-      }
-    );
+  ipcMain.handle("redis_set", async (event, [key, data]) => {
+    console.error(`redis_set(${key}, ${JSON.stringify(data)})`);
+    return await setAsync(key, JSON.stringify(data));
   });
 
-  // mainWindow.on("close", (event) => {
-  //   if (mainWindow.isVisible()) {
-  //     event.preventDefault();
-  //     mainWindow.hide();
-  //   }
-  // });
-}
+  ipcMain.handle("numsub", async (event, arg) => {
+    console.error(`numsub(${arg})`);
+    let [channel, nSubscribers] = await pubsubAsync("NUMSUB", arg);
+    return {
+      channel: channel,
+      nSubscribers: nSubscribers,
+    };
+  });
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-function createTray() {
-  tray = new Tray(path.join(assetsDirectory, "foo.png"));
-  tray.setIgnoreDoubleClickEvents(true);
-  //
-  // const contextMenu = Menu.buildFromTemplate([
-  //   { label: "🎭 Availables", type: "radio" },
-  //   { label: "🙉 Concentrated", type: "radio" },
-  //   { label: "🚽 Not here", type: "radio", checked: true },
-  // ]);
-  // // tray.setToolTip("This is my application.");
-  // tray.setContextMenu(contextMenu);
+  ipcMain.handle("publish", async (event, [channel, data]) => {
+    console.error(`publish(${channel}, ${JSON.stringify(data)})`);
+    return await publishAsync(channel, JSON.stringify(data));
+  });
 
-  tray.on("click", function (e) {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      mainWindow.show();
-    }
+  ipcMain.handle("subscribe", (event, channel) => {
+    console.error(`subscribe(${channel})`);
+    redisClientSubscriber.subscribe(channel);
   });
 }
 
 function connectRedis() {
   redisClient = redis.createClient(redis_server_address);
-
   redisClientSubscriber = redis.createClient(redis_server_address);
 
-  function updatePeopleCounts() {
-    redisClient.pubsub("NUMSUB", "foo", (err, data) => {
-      if (err) {
-        throw err;
-      }
-      let [channel, nSubscribers] = data;
-      mainWindow.webContents.send("nSubscribers", nSubscribers);
-    });
-  }
-  updatePeopleCounts();
-  setInterval(updatePeopleCounts, 3000);
-
   redisClientSubscriber.on("message", (channel, message) => {
-    let { timestamp, msgType, data } = JSON.parse(message);
-
-    console.error(timestamp, msgType, data);
-
-    // Skip messages that we published
-    if (timestamp === lastPublishedTimestamp) return;
-
-    if (msgType === "youtube:change") {
-      mainWindow.webContents.send("youtube:id", data);
-    }
+    console.error(`onMessage(${channel}, ${message})`);
+    mainWindow.webContents.send(channel, JSON.parse(message));
   });
-  redisClientSubscriber.subscribe("foo");
 }
 
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   connectRedis();
-  // createTray();
   createWindow();
 });
 
