@@ -1,94 +1,101 @@
-/* !  **/
+/* !* !  **! */
 
-/* * @NOTE: Prepend a `~` to css file paths that are in your node_modules */
+/* !* * @NOTE: Prepend a `~` to css file paths that are in your node_modules *! */
 
-/* *        See https://github.com/webpack-contrib/sass-loader#imports */
+/* !* *        See https://github.com/webpack-contrib/sass-loader#imports *! */
 
-/* *! */
+/* !* *! *! */
 
 @import '~@fortawesome/fontawesome-free/css/all.css';
 
-.cursor-pointer {
-  cursor: pointer !important;
-}
+/* .cursor-pointer { */
 
-.btn:focus,
-.btn:active,
-* {
-  outline: none !important;
-  box-shadow: none;
-}
-
-/* !*@import '~bootstrap/scss/bootstrap.scss';*! */
-
-/* body { */
-
-/*  position: relative; */
-
-/*  color: white; */
-
-/*  height: 100vh; */
-
-/*  background-color: #232c39; */
-
-/*  background-image: linear-gradient( */
-
-/*    45deg, */
-
-/*    rgba(0, 216, 255, 0.5) 10%, */
-
-/*    rgba(0, 1, 127, 0.7) */
-
-/*  ); */
-
-/*  font-family: Arial, Helvetica, Helvetica Neue, serif; */
-
-/*  overflow-y: hidden; */
+/*  cursor: pointer !important; */
 
 /* } */
 
-/* h2 { */
+/* .btn:focus, */
 
-/*  margin: 0; */
+/* .btn:active, */
 
-/*  font-size: 2.25rem; */
+/** { */
 
-/*  font-weight: bold; */
+/*  outline: none !important; */
 
-/*  letter-spacing: -0.025em; */
-
-/*  color: #fff; */
+/*  box-shadow: none; */
 
 /* } */
 
-/* p { */
+/* !* !*@import '~bootstrap/scss/bootstrap.scss';*! *! */
 
-/*  font-size: 24px; */
+/* !* body { *! */
 
-/* } */
+/* !*  position: relative; *! */
 
-/* li { */
+/* !*  color: white; *! */
 
-/*  list-style: none; */
+/* !*  height: 100vh; *! */
 
-/* } */
+/* !*  background-color: #232c39; *! */
 
-/* a { */
+/* !*  background-image: linear-gradient( *! */
 
-/*  color: white; */
+/* !*    45deg, *! */
 
-/*  opacity: 0.75; */
+/* !*    rgba(0, 216, 255, 0.5) 10%, *! */
 
-/*  text-decoration: none; */
+/* !*    rgba(0, 1, 127, 0.7) *! */
 
-/* } */
+/* !*  ); *! */
 
-/* a:hover { */
+/* !*  font-family: Arial, Helvetica, Helvetica Neue, serif; *! */
 
-/*  opacity: 1; */
+/* !*  overflow-y: hidden; *! */
 
-/*  text-decoration: none; */
+/* !* } *! */
 
-/*  cursor: pointer; */
+/* !* h2 { *! */
 
-/* } */
+/* !*  margin: 0; *! */
+
+/* !*  font-size: 2.25rem; *! */
+
+/* !*  font-weight: bold; *! */
+
+/* !*  letter-spacing: -0.025em; *! */
+
+/* !*  color: #fff; *! */
+
+/* !* } *! */
+
+/* !* p { *! */
+
+/* !*  font-size: 24px; *! */
+
+/* !* } *! */
+
+/* !* li { *! */
+
+/* !*  list-style: none; *! */
+
+/* !* } *! */
+
+/* !* a { *! */
+
+/* !*  color: white; *! */
+
+/* !*  opacity: 0.75; *! */
+
+/* !*  text-decoration: none; *! */
+
+/* !* } *! */
+
+/* !* a:hover { *! */
+
+/* !*  opacity: 1; *! */
+
+/* !*  text-decoration: none; *! */
+
+/* !*  cursor: pointer; *! */
+
+/* !* } *! */
