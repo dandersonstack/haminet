@@ -83,13 +83,5 @@
 
 /* !*  cursor: pointer; *! */
 
-/* !* } *! */
-
-/*  !*position: absolute;*! */
-
-/*  !*top: 30%;*! */
-
-/*  !*left: 45%;*! */
-
-/*  !*font-size: 10rem;*! */.Counter__navbar__zcliQ{font-size:.8em}.Counter__navbarBrand__25qCP{font-size:inherit;text-align:right}.Counter__player__LbfXJ{height:270px;overflow:hidden}.Counter__player__LbfXJ iframe{width:100%;height:300px;display:block;overflow:hidden}.Counter__volumeIcon__aBlte{font-size:1.5em;text-align:right}.Counter__inputLink__3N9iA{font-size:.8em}.Counter__bottomButton__oPYmQ{border:0}.Counter__bottomButton__oPYmQ:hover{background:#4b545c;color:#fff;border:0}
+/* !* } *! */.Openspace__bottomButton__1A5I4{border:0}.Openspace__bottomButton__1A5I4:hover{background:#4b545c;color:#fff;border:0}.MusicVolumeControl__volumeIcon__2fAej{font-size:1.5em;text-align:right}.MusicPlayer__container__V8SBF{width:100%;height:270px;overflow:hidden;position:relative}.MusicPlayer__player__18i_L{width:100%;height:300px;display:block}.MusicPlayer__container__V8SBF:after{content:"";position:absolute;width:100%;height:250px;background:transparent;z-index:1000;top:0}.ChangeMusicInput__changeMusicInput__2ER0V,.CoreApp__navbar__2NaRw{font-size:.8em}.CoreApp__navbarBrand__2roIg{font-size:inherit;text-align:right}
 /*# sourceMappingURL=style.css.map */
