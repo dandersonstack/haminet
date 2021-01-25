@@ -1,101 +1,137 @@
-/* !* !  **! */
-
-/* !* * @NOTE: Prepend a `~` to css file paths that are in your node_modules *! */
-
-/* !* *        See https://github.com/webpack-contrib/sass-loader#imports *! */
-
-/* !* *! *! */
-
 @import '~@fortawesome/fontawesome-free/css/all.css';
+@import '~bootstrap/dist/css/bootstrap.css';
 
-/* .cursor-pointer { */
+:root {
+  --main-bg-color: #212121;
+  --secondary-bg-color: #303030;
+  --hover-bg-color: #424242;
+  --voice-color: #f00;
+  --mute-color: #bdbdbd;
+  --action-color: #388e3c;
+  --text-color: #fff;
+  --top-z-index: 1000;
+  --second-z-index: 900;
+  --shadow-lvl-one: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-lvl-three: 0 19px 38px rgba(0, 0, 0, 0.3),
+    0 15px 12px rgba(0, 0, 0, 0.22);
+  --top-nav-height: 44px;
+  --music-player-height: 250px;
+  --user-list-width: 130px;
+}
 
-/*  cursor: pointer !important; */
+* {
+  box-sizing: border-box;
+}
 
-/* } */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-color);
+  background: var(--main-bg-color);
+  text-align: left;
+  padding: 0;
+  margin: 0;
+}
 
-/* .btn:focus, */
+#root {
+  display: flex;
+  flex-direction: column;
+  background: var(--main-bg-color);
+}
 
-/* .btn:active, */
+/* ============================================================================== */
 
-/** { */
+/* Copied from https://github.com/vkbansal/react-contextmenu/blob/master/examples/react-contextmenu.css */
 
-/*  outline: none !important; */
+/* ============================================================================== */
+.react-contextmenu {
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+  color: #373a3c;
 
-/*  box-shadow: none; */
+  /* font-size: 16px; */
+  margin: 2px 0 0;
+  min-width: 160px;
+  outline: none;
+  opacity: 0;
+  padding: 5px 0;
+  pointer-events: none;
+  text-align: left;
+  transition: opacity 250ms ease !important;
+}
 
-/* } */
+.react-contextmenu.react-contextmenu--visible {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 9999;
+}
 
-/* !* !*@import '~bootstrap/scss/bootstrap.scss';*! *! */
+.react-contextmenu-item {
+  background: 0 0;
+  border: 0;
+  color: #373a3c;
+  cursor: pointer;
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 3px 20px;
+  text-align: inherit;
+  white-space: nowrap;
+}
 
-/* !* body { *! */
+.react-contextmenu-item.react-contextmenu-item--active,
+.react-contextmenu-item.react-contextmenu-item--selected {
+  color: #fff;
+  background-color: #20a0ff;
+  border-color: #20a0ff;
+  text-decoration: none;
+}
 
-/* !*  position: relative; *! */
+.react-contextmenu-item.react-contextmenu-item--disabled,
+.react-contextmenu-item.react-contextmenu-item--disabled:hover {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #878a8c;
+}
 
-/* !*  color: white; *! */
+.react-contextmenu-item--divider {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: inherit;
+  margin-bottom: 3px;
+  padding: 2px 0;
+}
+.react-contextmenu-item--divider:hover {
+  background-color: transparent;
+  border-color: rgba(0, 0, 0, 0.15);
+}
 
-/* !*  height: 100vh; *! */
+.react-contextmenu-item.react-contextmenu-submenu {
+  padding: 0;
+}
 
-/* !*  background-color: #232c39; *! */
+/* .react-contextmenu-item.react-contextmenu-submenu > .react-contextmenu-item {
+} */
 
-/* !*  background-image: linear-gradient( *! */
+.react-contextmenu-item.react-contextmenu-submenu
+  > .react-contextmenu-item::after {
+  content: '▶';
+  display: inline-block;
+  position: absolute;
+  right: 7px;
+}
 
-/* !*    45deg, *! */
+.example-multiple-targets::after {
+  content: attr(data-count);
+  display: block;
+}
 
-/* !*    rgba(0, 216, 255, 0.5) 10%, *! */
-
-/* !*    rgba(0, 1, 127, 0.7) *! */
-
-/* !*  ); *! */
-
-/* !*  font-family: Arial, Helvetica, Helvetica Neue, serif; *! */
-
-/* !*  overflow-y: hidden; *! */
-
-/* !* } *! */
-
-/* !* h2 { *! */
-
-/* !*  margin: 0; *! */
-
-/* !*  font-size: 2.25rem; *! */
-
-/* !*  font-weight: bold; *! */
-
-/* !*  letter-spacing: -0.025em; *! */
-
-/* !*  color: #fff; *! */
-
-/* !* } *! */
-
-/* !* p { *! */
-
-/* !*  font-size: 24px; *! */
-
-/* !* } *! */
-
-/* !* li { *! */
-
-/* !*  list-style: none; *! */
-
-/* !* } *! */
-
-/* !* a { *! */
-
-/* !*  color: white; *! */
-
-/* !*  opacity: 0.75; *! */
-
-/* !*  text-decoration: none; *! */
-
-/* !* } *! */
-
-/* !* a:hover { *! */
-
-/* !*  opacity: 1; *! */
-
-/* !*  text-decoration: none; *! */
-
-/* !*  cursor: pointer; *! */
-
-/* !* } *! */
+/* ============================================================================== */
