@@ -1,1 +1,31 @@
-<img src="https://docs.google.com/drawings/d/e/2PACX-1vQN85P1TO4XRL6IBXKK9wdRqMivR4-GGn702-0s2uUapUp1ldN_Qs6cxn4XoKjvZNxEORfFaAHv3qwE/pub?w=960&amp;h=720">
+<style>
+  body {
+    background: black;
+  }
+  .container {
+    height: 100%;
+    position: relative;
+    text-align: center;
+  }
+
+  .vertical-center {
+    margin: 0;
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    text-align: center;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+  }
+</style>
+<div class="container">
+  <div class="vertical-center">
+    <img id="foo" />
+  </div>
+</div>
+<script type="text/javascript">
+  (function () {
+    const url = `https://docs.google.com/drawings/d/e/2PACX-1vQN85P1TO4XRL6IBXKK9wdRqMivR4-GGn702-0s2uUapUp1ldN_Qs6cxn4XoKjvZNxEORfFaAHv3qwE/pub?foo=bar&w=960&amp;h=720&foo=${Date.now()}`;
+    document.getElementById("foo").src = url;
+  })();
+</script>
